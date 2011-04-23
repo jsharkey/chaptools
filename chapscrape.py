@@ -25,11 +25,12 @@ BOOKS = {
 	"John": range(1, 22)
 }
 
-OUTPUTFILE = "chapscrape.json"
+OUTPUTFILE = "bodytext.json"
 
 CHAPTER, SECTION, VERSE, TEXT = ("CHAPTER", "SECTION", "VERSE", "TEXT")
 
 re_ignore = re.compile(r'The earliest manuscripts and many other ancient witnesses')
+re_replace = re.compile(r'\[\[\[/woj\]\]\]')
 
 def build_event(event, data):
 	return {'event':event,'data':data}
@@ -57,10 +58,11 @@ for book in BOOKS:
 		while tag != end and tag is not None:
 			if isinstance(tag, bs.NavigableString):
 				if re_ignore.search(tag.string) is None:
+					string = re_replace.sub('', tag.string)
 					if activeText is None:
 						activeText = build_event(TEXT, "")
 						events.append(activeText)
-					activeText['data'] += tag.string
+					activeText['data'] += string
 			
 			if isinstance(tag, bs.Tag):
 				attrs = dict(tag.attrs)

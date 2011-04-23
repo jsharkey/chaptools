@@ -20,37 +20,61 @@
 
 import simplejson, re
 
-INPUTFILE = "chapscrape.json"
+# when true, count duplicate words inside single verse as unique
+ALLOW_DUPE_INSIDE_VERSE = True
+
+INPUTFILE = "bodytext.json"
 CHAPTER, SECTION, VERSE, TEXT = ("CHAPTER", "SECTION", "VERSE", "TEXT")
 
 input = open(INPUTFILE, 'r')
 
 re_compound = re.compile(u"['\u2019]", re.UNICODE)
-#re_boundary = re.compile(r'[^\w\s]')
 re_word = re.compile(r'\b([\w-]+)\b')
 
-words = {}
+class WordCount:
+	def __init__(self):
+		self.words = {}
+	
+	def discover(self, word, count=1):
+		if word not in self.words:
+			self.words[word] = 0
+		self.words[word] += count
+	
+	def combine(self, another):
+		for word, count in another.words.iteritems():
+			if ALLOW_DUPE_INSIDE_VERSE:
+				self.discover(word)
+			else:
+				self.discover(word, count)
+
+
+words = WordCount()
+verse_words = WordCount()
+
 
 for events in input.readlines():
 	events = simplejson.loads(events)
 	for event in events:
-		if event['event'] == TEXT:
+		if event['event'] == VERSE:
+			words.combine(verse_words)
+			verse_words = WordCount()
+		elif event['event'] == TEXT:
 			body = event['data'].upper()
 			body = re_compound.sub('', body)
-			#body = re_boundary.sub(' ', body)
 			for word in re_word.findall(body):
-				if word not in words:
-					words[word] = 0
-				words[word] += 1
+				verse_words.discover(word)
+
+# and combine last verse
+words.combine(verse_words)
 
 def dump_words(words):
 	words.sort()
 	print '\n'.join(words)
 
 
-once = [word for word, count in words.iteritems() if count == 1]
-twice = [word for word, count in words.iteritems() if count == 2]
-thrice = [word for word, count in words.iteritems() if count == 3]
+once = [word for word, count in words.words.iteritems() if count == 1]
+twice = [word for word, count in words.words.iteritems() if count == 2]
+thrice = [word for word, count in words.words.iteritems() if count == 3]
 
 #dump_words(once)
 
