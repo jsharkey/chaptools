@@ -21,12 +21,10 @@
 import simplejson, re
 
 # when true, count duplicate words inside single verse as unique
-ALLOW_DUPE_INSIDE_VERSE = True
+ALLOW_DUPE_INSIDE_VERSE = False
 
 INPUTFILE = "bodytext.json"
 CHAPTER, SECTION, VERSE, TEXT = ("CHAPTER", "SECTION", "VERSE", "TEXT")
-
-input = open(INPUTFILE, 'r')
 
 re_compound = re.compile(u"['\u2019]", re.UNICODE)
 re_word = re.compile(r'\b([\w-]+)\b')
@@ -47,25 +45,29 @@ class WordCount:
 			else:
 				self.discover(word, count)
 
+# load all chapter events
+events = []
+with open(INPUTFILE, 'r') as input:
+	for line in input.readlines():
+		events.extend(simplejson.loads(line))
+
 
 words = WordCount()
 verse_words = WordCount()
 
-
-for events in input.readlines():
-	events = simplejson.loads(events)
-	for event in events:
-		if event['event'] == VERSE:
-			words.combine(verse_words)
-			verse_words = WordCount()
-		elif event['event'] == TEXT:
-			body = event['data'].upper()
-			body = re_compound.sub('', body)
-			for word in re_word.findall(body):
-				verse_words.discover(word)
+for event in events:
+	if event['event'] == VERSE:
+		words.combine(verse_words)
+		verse_words = WordCount()
+	elif event['event'] == TEXT:
+		body = event['data'].upper()
+		body = re_compound.sub('', body)
+		for word in re_word.findall(body):
+			verse_words.discover(word)
 
 # and combine last verse
 words.combine(verse_words)
+
 
 def dump_words(words):
 	words.sort()
@@ -81,7 +83,5 @@ thrice = [word for word, count in words.words.iteritems() if count == 3]
 print "words mentioned once", len(once)
 print "words mentioned twice", len(twice)
 print "words mentioned thrice", len(thrice)
-
-input.close()
 
 
