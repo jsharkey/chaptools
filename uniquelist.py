@@ -21,13 +21,14 @@
 import simplejson, re
 
 # when true, count duplicate words inside single verse as unique
-ALLOW_DUPE_INSIDE_VERSE = False
+ALLOW_DUPE_INSIDE_VERSE = True
 
 INPUTFILE = "bodytext.json"
 CHAPTER, SECTION, VERSE, TEXT = ("CHAPTER", "SECTION", "VERSE", "TEXT")
 
-re_compound = re.compile(u"['\u2019]", re.UNICODE)
-re_word = re.compile(r'\b([\w-]+)\b')
+WORD_CLASS = u"[\w'\u2019-]"
+re_word = re.compile(r"\b(%s+)\b" % WORD_CLASS)
+re_compound = re.compile(u"['\u2019-]")
 
 class WordCount:
 	def __init__(self):
@@ -61,8 +62,8 @@ for event in events:
 		verse_words = WordCount()
 	elif event['event'] == TEXT:
 		body = event['data'].upper()
-		body = re_compound.sub('', body)
 		for word in re_word.findall(body):
+			word = re_compound.sub('', word)
 			verse_words.discover(word)
 
 # and combine last verse

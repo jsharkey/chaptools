@@ -27,7 +27,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph
 INPUTFILE = "bodytext.json"
 CHAPTER, SECTION, VERSE, TEXT = ("CHAPTER", "SECTION", "VERSE", "TEXT")
 
-re_of_block = re.compile(r'\b(\w+)\s+of\s+(\w+)\b', re.IGNORECASE)
+WORD_CLASS = u"[\w'\u2019-]"
+re_of_block = re.compile(r"\b(%s+)\s+of\s+(%s+)\b" % (WORD_CLASS, WORD_CLASS), re.IGNORECASE)
 
 # load all chapter events
 events = []
@@ -35,10 +36,6 @@ with open(INPUTFILE, 'r') as input:
 	for line in input.readlines():
 		events.extend(simplejson.loads(line))
 
-
-class Verse:
-	def __init__(self, ref):
-		self.ref = ref
 
 # collect all verses
 verses = []
@@ -109,11 +106,11 @@ def buildTable(data):
         return table
 
 # build pdf output
-doc = SimpleDocTemplate("of_something_list.pdf", pagesize=pagesizes.letter, topMargin=margin,
+doc = SimpleDocTemplate("out_of_something.pdf", pagesize=pagesizes.letter, topMargin=margin,
         leftMargin=margin, bottomMargin=margin, rightMargin=margin)
 doc.build([buildTable(of_something)])
 
-doc = SimpleDocTemplate("something_of_list.pdf", pagesize=pagesizes.letter, topMargin=margin,
+doc = SimpleDocTemplate("out_something_of.pdf", pagesize=pagesizes.letter, topMargin=margin,
         leftMargin=margin, bottomMargin=margin, rightMargin=margin)
 doc.build([buildTable(something_of)])
 
