@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-	chapscrape -- library to scrape chapters from biblegateway.com
+	chapscrape -- script to scrape chapters for analysis
 	Copyright (C) 2011 Jeff Sharkey, http://jsharkey.org
 	
 	This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ BOOKS = {
 
 OUTPUTFILE = "bodytext.json"
 
-CHAPTER, SECTION, VERSE, TEXT = ("CHAPTER", "SECTION", "VERSE", "TEXT")
+BOOK, CHAPTER, SECTION, VERSE, TEXT = ("BOOK", "CHAPTER", "SECTION", "VERSE", "TEXT")
 
 re_ignore = re.compile(r'The earliest manuscripts and many other ancient witnesses')
 re_replace = re.compile(r'\[\[\[/woj\]\]\]')
@@ -41,6 +41,8 @@ def skip_subtree(tag):
 output = open(OUTPUTFILE, 'w')
 
 for book in BOOKS:
+	simplejson.dump([build_event(BOOK, book)], output)
+	output.write('\n')
 	for chapter in BOOKS[book]:
 		print "scraping", book, chapter,
 		sys.stdout.flush()

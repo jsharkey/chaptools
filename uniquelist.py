@@ -63,7 +63,7 @@ for event in events:
 	elif event['event'] == TEXT:
 		body = event['data'].upper()
 		for word in re_word.findall(body):
-			word = re_compound.sub('', word)
+			#word = re_compound.sub('', word)
 			verse_words.discover(word)
 
 # and combine last verse
