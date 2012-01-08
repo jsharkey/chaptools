@@ -18,7 +18,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import urllib2, simplejson, sys, re
+import urllib, urllib2, simplejson, sys, re
 import BeautifulSoup as bs
 
 BOOKS = {
@@ -50,7 +50,7 @@ for book in BOOKS:
 		print "scraping", book, chapter,
 		sys.stdout.flush()
 		
-		url = "http://www.biblegateway.com/passage/?search=%s+%d&version=NIV1984&interface=print" % (book, chapter)
+		url = "http://www.biblegateway.com/passage/?search=%s+%d&version=NIV1984&interface=print" % (urllib.quote_plus(book), chapter)
 		soup = bs.BeautifulSoup(urllib2.urlopen(url), convertEntities=bs.BeautifulSoup.ALL_ENTITIES)
 		
 		start = soup.first('div', attrs={'class':'result-text-style-normal  '})
