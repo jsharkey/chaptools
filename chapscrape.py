@@ -22,7 +22,10 @@ import urllib2, simplejson, sys, re
 import BeautifulSoup as bs
 
 BOOKS = {
-	"John": range(1, 22)
+	#"John": range(1, 22)
+	"Hebrews": range(1, 14),
+	"1 Peter": range(1, 6),
+	"2 Peter": range(1, 4)
 }
 
 OUTPUTFILE = "bodytext.json"
@@ -50,7 +53,7 @@ for book in BOOKS:
 		url = "http://www.biblegateway.com/passage/?search=%s+%d&version=NIV1984&interface=print" % (book, chapter)
 		soup = bs.BeautifulSoup(urllib2.urlopen(url), convertEntities=bs.BeautifulSoup.ALL_ENTITIES)
 		
-		start = soup.first('div', attrs={'class':'result-text-style-normal'})
+		start = soup.first('div', attrs={'class':'result-text-style-normal  '})
 		end = soup.first('div', attrs={'class':'footnotes'})
 		
 		events = []
