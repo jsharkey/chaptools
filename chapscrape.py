@@ -21,12 +21,12 @@
 import urllib, urllib2, simplejson, sys, re
 import BeautifulSoup as bs
 
-BOOKS = {
+BOOKS = [
 	#"John": range(1, 22)
-	"Hebrews": range(1, 14),
-	"1 Peter": range(1, 6),
-	"2 Peter": range(1, 4)
-}
+	("Hebrews", range(1, 14)),
+	("1 Peter", range(1, 6)),
+	("2 Peter", range(1, 4))
+]
 
 OUTPUTFILE = "bodytext.json"
 
@@ -43,10 +43,10 @@ def skip_subtree(tag):
 
 output = open(OUTPUTFILE, 'w')
 
-for book in BOOKS:
+for book, chapters in BOOKS:
 	simplejson.dump([build_event(BOOK, book)], output)
 	output.write('\n')
-	for chapter in BOOKS[book]:
+	for chapter in chapters:
 		print "scraping", book, chapter,
 		sys.stdout.flush()
 		
