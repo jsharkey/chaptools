@@ -109,7 +109,7 @@ for book, chapters in BOOKS:
 		
 		versecount = len([event for event in events if event['event'] is VERSE])
 		print "and found", versecount, "verses"
-		simplejson.dump(events, output, indent=4)
+		simplejson.dump(events, output) # indent=4
 		output.write('\n')
 
 output.close()
