@@ -21,6 +21,7 @@
 import urllib, urllib2, simplejson, sys, re
 import BeautifulSoup as bs
 
+
 BOOKS = [
 	#"John": range(1, 22)
 	("Hebrews", range(1, 14)),
@@ -39,7 +40,9 @@ def build_event(event, data):
 	return {'event':event,'data':data}
 
 def skip_subtree(tag):
-	return tag.contents[-1].next
+	while not tag.nextSibling:
+		tag = tag.parent
+	return tag.nextSibling
 
 output = open(OUTPUTFILE, 'w')
 
@@ -50,10 +53,10 @@ for book, chapters in BOOKS:
 		print "scraping", book, chapter,
 		sys.stdout.flush()
 		
-		url = "http://www.biblegateway.com/passage/?search=%s+%d&version=NIV1984&interface=print" % (urllib.quote_plus(book), chapter)
+		url = "http://www.biblegateway.com/passage/?search=%s+%d&version=NIV&interface=print" % (urllib.quote_plus(book), chapter)
 		soup = bs.BeautifulSoup(urllib2.urlopen(url), convertEntities=bs.BeautifulSoup.ALL_ENTITIES)
 		
-		start = soup.first('div', attrs={'class':'result-text-style-normal  '})
+		start = soup.first('div', attrs={'class':'result-text-style-normal text-html '})
 		end = soup.first('div', attrs={'class':'footnotes'})
 		
 		events = []
@@ -71,23 +74,33 @@ for book, chapters in BOOKS:
 			
 			if isinstance(tag, bs.Tag):
 				attrs = dict(tag.attrs)
-				if tag.name == 'h4':
-					events.append(build_event(CHAPTER, tag.text))
+				if tag.name == 'div' and 'heading' in attrs['class']:
 					tag = skip_subtree(tag)
 					activeText = None
 					continue
-				elif tag.name == 'h5':
+				elif tag.name == 'span' and 'chapternum' in attrs['class']:
+					events.append(build_event(CHAPTER, tag.text))
+					events.append(build_event(VERSE, "1"))
+					tag = skip_subtree(tag)
+					activeText = None
+					continue
+				elif tag.name == 'h3':
 					events.append(build_event(SECTION, tag.text))
 					tag = skip_subtree(tag)
 					activeText = None
 					continue
-				elif tag.name == 'sup' and attrs['class'] == 'versenum':
+				elif tag.name == 'sup' and 'versenum' in attrs['class']:
 					events.append(build_event(VERSE, tag.text))
 					tag = skip_subtree(tag)
 					activeText = None
 					continue
-				elif tag.name == 'sup' and attrs['class'] == 'footnote':
+				elif tag.name == 'sup' and 'footnote' in attrs['class']:
 					tag = skip_subtree(tag)
+					continue
+				elif tag.name == 'sup' and 'crossreference' in attrs['class']:
+					tag = skip_subtree(tag)
+					if isinstance(tag, bs.NavigableString):
+						tag.string = tag.string.lstrip()
 					continue
 				else:
 					pass
@@ -96,7 +109,7 @@ for book, chapters in BOOKS:
 		
 		versecount = len([event for event in events if event['event'] is VERSE])
 		print "and found", versecount, "verses"
-		simplejson.dump(events, output)
+		simplejson.dump(events, output, indent=4)
 		output.write('\n')
 
 output.close()
